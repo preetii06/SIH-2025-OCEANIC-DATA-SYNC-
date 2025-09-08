@@ -7,11 +7,14 @@ import FisheriesChart from './FisheriesChart'
 import BiodiversityMap from './BiodiversityMap'
 import ProviderButtons from './ProviderButtons'
 import NOAAChart from '../Charts/NOAAChart'
+import WormsTable from './WormsTable'
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [records, setRecords] = useState([])
+  const [wormTaxon, setWormTaxon] = useState('');
+
   // -----------------------------
   // Derived provider-specific data
   // -----------------------------
@@ -24,6 +27,20 @@ export default function Dashboard() {
     () => records.filter(r => r.source === 'data.gov.in' && r.year),
     [records]
   )
+  // const wormsRecords = useMemo(
+  //   () => records.filter(r => r.source?.toLowerCase().includes("worms")),
+  //   [records]
+  // );
+  const wormsRecords = useMemo(() => {
+      if (!wormTaxon) {
+        return records.filter(r => r.source?.toLowerCase().includes("worms"));
+      }
+      return records.filter(
+        r => r.source?.toLowerCase().includes("worms") &&
+            r.scientificName?.toLowerCase().includes(wormTaxon.toLowerCase())
+      );
+    }, [records, wormTaxon]);
+
 
   const noaaRecords = useMemo(
     () => records.filter(r => r.source?.toLowerCase().includes('noaa')),
@@ -167,6 +184,12 @@ export default function Dashboard() {
             <NOAAChart records={noaaRecords} />
           </div>
         </div>
+        <div className="card" style={{ gridColumn: 'span 3' }}>
+           <div className="card-body">
+              <h2 className="card-title">WoRMS Taxonomy</h2>
+              <WormsTable records={wormsRecords} />
+            </div>
+          </div>
       </div>
     </div>
   )

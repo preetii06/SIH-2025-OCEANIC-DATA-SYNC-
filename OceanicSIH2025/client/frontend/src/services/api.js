@@ -1,26 +1,4 @@
-// import axios from 'axios'
 
-// const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-// const client = axios.create({
-//   baseURL: BASE_URL,
-//   timeout: 20000,
-// })
-
-// async function ingest(provider, payload) {
-//   const { data } = await client.post('/ingest/', { provider, payload })
-//   return data
-// }
-
-// async function getData() {
-//   const { data } = await client.get('/data/')
-//   return data
-// }
-
-// export default { ingest, getData }
-
-// src/services/api.js
-// src/services/api.js
 const API_URL = "http://localhost:8000"; // change to deployed backend later
 
 // 🔹 Generic: get all stored records
@@ -68,7 +46,18 @@ async function getNOAARecord({ station, product, begin_date, end_date }) {
 
   return await res.json();
 }
+// 🔹 WoRMS: dedicated function
+async function ingestWorms({ scientificname, AphiaID }) {
+  if (!scientificname && !AphiaID) {
+    throw new Error("Either scientificname or AphiaID is required");
+  }
 
-export default { getData, ingest, getNOAARecord };
+  const payload = scientificname
+    ? { endpoint: "AphiaRecordsByName", params: { scientificname } }
+    : { endpoint: "AphiaRecordByAphiaID", params: { AphiaID } };
+
+  return await ingest("worms", payload);
+}
+export default { getData, ingest, getNOAARecord , ingestWorms };
 
 
