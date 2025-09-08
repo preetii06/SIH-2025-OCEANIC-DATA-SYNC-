@@ -12,7 +12,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [records, setRecords] = useState([])
-
   // -----------------------------
   // Derived provider-specific data
   // -----------------------------
