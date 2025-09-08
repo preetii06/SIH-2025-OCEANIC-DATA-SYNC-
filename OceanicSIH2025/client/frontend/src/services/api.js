@@ -58,6 +58,34 @@ async function ingestWorms({ scientificname, AphiaID }) {
 
   return await ingest("worms", payload);
 }
-export default { getData, ingest, getNOAARecord , ingestWorms };
+async function ingestObis({ scientificname, size = 20 }) {
+  if (!scientificname) {
+    throw new Error("Scientific name is required for OBIS ingestion");
+  }
+
+  const payload = {
+    endpoint: "occurrence",
+    params: { scientificname, size }
+  };
+
+  return await ingest("obis", payload);
+}
+
+export async function ingestOpenMeteo(payload) {
+  const reqPayload = {
+    ...payload,
+    limit_hours: payload.limit_hours || 6, // default 48 hours
+  };
+
+  const res = await fetch("http://localhost:8000/ingest/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider: "open-meteo", payload: reqPayload }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch Open-Meteo data");
+  return res.json();
+}
+
+export default { getData, ingest, getNOAARecord , ingestWorms, ingestObis };
 
 

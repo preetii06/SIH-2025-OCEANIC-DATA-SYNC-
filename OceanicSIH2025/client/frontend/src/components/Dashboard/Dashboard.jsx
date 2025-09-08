@@ -8,6 +8,9 @@ import BiodiversityMap from './BiodiversityMap'
 import ProviderButtons from './ProviderButtons'
 import NOAAChart from '../Charts/NOAAChart'
 import WormsTable from './WormsTable'
+import ObisTable from './ObisTable';
+import ObisDepthChart from '../Charts/ObisDepthChart';
+import OpenMeteo from './OpenMeteo';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(false)
@@ -18,10 +21,10 @@ export default function Dashboard() {
   // -----------------------------
   // Derived provider-specific data
   // -----------------------------
-  const obisPoints = useMemo(
-    () => records.filter(r => r.source?.toLowerCase().startsWith('obis') && r.latitude && r.longitude),
-    [records]
-  )
+  const obisRecords = useMemo(
+      () => records.filter(r => r.source?.toLowerCase().startsWith("obis")),
+      [records]
+    );
 
   const fisheries = useMemo(
     () => records.filter(r => r.source === 'data.gov.in' && r.year),
@@ -46,6 +49,11 @@ export default function Dashboard() {
     () => records.filter(r => r.source?.toLowerCase().includes('noaa')),
     [records]
   )
+  const openMeteoRecords = useMemo(
+  () => records.filter(r => r.source?.toLowerCase().includes("open-meteo")),
+  [records]
+);
+
 
   // -----------------------------
   // KPIs
@@ -105,9 +113,9 @@ export default function Dashboard() {
       .sort((a, b) => a.year.localeCompare(b.year))
   }, [fisheries])
 
-  const center = obisPoints.length
-    ? [obisPoints[0].latitude, obisPoints[0].longitude]
-    : [20.5937, 78.9629]
+  // const center = obisPoints.length
+  //   ? [obisPoints[0].latitude, obisPoints[0].longitude]
+  //   : [20.5937, 78.9629]
 
   // -----------------------------
   // Render
@@ -188,6 +196,21 @@ export default function Dashboard() {
            <div className="card-body">
               <h2 className="card-title">WoRMS Taxonomy</h2>
               <WormsTable records={wormsRecords} />
+            </div>
+          </div>
+          <div className="card" style={{ gridColumn: 'span 3' }}>
+           <div className="card-body">
+              <h2 className="card-title">OBIS OCEANIC RECORDS</h2>
+              <ObisTable records={obisRecords} />
+              <ObisDepthChart records={obisRecords} />
+            </div>
+          </div>
+          <div className="card" style={{ gridColumn: 'span 3' }}>
+           <div className="card-body">
+              <h2 className="card-title">Marine Data Dashboard</h2>
+        
+              <OpenMeteo records={openMeteoRecords} />
+
             </div>
           </div>
       </div>

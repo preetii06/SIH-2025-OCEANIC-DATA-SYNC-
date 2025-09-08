@@ -29,9 +29,12 @@ def fetch_open_meteo(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     records = []
     lat, lon = payload.get("latitude"), payload.get("longitude")
     timestamps = data.get("hourly", {}).get("time", [])
+    # ✅ limit how many records we ingest
+    limit_hours = payload.get("limit_hours", 6)  
+    timestamps = timestamps[:limit_hours]
 
     for param in params["hourly"].split(","):
-        values = data.get("hourly", {}).get(param, [])
+        values = data.get("hourly", {}).get(param, [])[:limit_hours]
         for t, v in zip(timestamps, values):
             if v is None:  # skip missing values
                 continue
