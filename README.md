@@ -28,6 +28,72 @@ uvicorn main:app --reload
 
 - Deactivate the virtual environment when done:`deactivate`
 
-- 
 
+# TO TRY ON THE API PROVIDERS WE ARE USING :
+on swaggerUI :http://127.0.0.1:8000/docs 
+
+Body of req :
+
+# NOAA :
+```
+{
+  "provider": "noaa",
+  "payload": {
+    "station": "8723214",
+    "product": "air_pressure",
+    "begin_date": "20250801",
+    "end_date": "20250803"
+  }
+}
+
+```
+# WORMS
+```
+
+{
+  "provider": "worms",
+  "payload": {
+    "endpoint": "AphiaRecordsByName",
+    "params": {
+      "scientificname": "Panulirus homarus"
+    },
+    "limit": 5
+  }
+}
+```
+
+# OPEN-METEO
+```
+{
+  "provider": "open-meteo",
+  "payload": {
+    "latitude": 15.0,
+    "longitude": 73.0,
+    "hourly": [
+      "wave_height",
+      "wave_direction",
+      "wave_period",
+      "sea_surface_temperature",
+      "ocean_current_velocity",
+      "ocean_current_direction",
+      "swell_wave_height",
+      "swell_wave_period"
+    ]
+  }
+}
+```
+# OBIS 
+```
+{
+  "provider": "obis",
+  "payload": {
+    "endpoint": "occurrence",
+    "params": {
+      "scientificname": "Sardinella",
+      "size": 5
+    }
+  }
+}
+
+```
 
