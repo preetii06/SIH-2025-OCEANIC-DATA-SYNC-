@@ -1,7 +1,7 @@
-export default function StatsPanel({ kpis }) {
+export default function StatsPanel({ kpis, onTotalClick }) {
   return (
     <div className="stats grid grid-4 mb-24">
-      <div className="stat">
+      <div className="stat" style={{ cursor: onTotalClick ? 'pointer' : 'default' }} onClick={onTotalClick}>
         <div className="stat-title">Total Records</div>
         <div className="stat-value">{kpis.total}</div>
         <div className="stat-desc">From all providers</div>

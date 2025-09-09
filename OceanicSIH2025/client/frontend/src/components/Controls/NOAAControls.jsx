@@ -3,8 +3,7 @@ import api from "../../services/api";
 
 const paramsList = [
   "water_level", "water_temperature", "air_temperature",
-  "wind", "air_pressure", "visibility", "humidity",
-  "conductivity", "salinity", "currents", "predictions"
+  "wind", "air_pressure", "visibility"
 ];
 
 export default function NOAAControls({ onFetched }) {

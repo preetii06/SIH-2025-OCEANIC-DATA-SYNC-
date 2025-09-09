@@ -51,6 +51,7 @@ export default function ProviderButtons({ onAfterIngest }) {
     try {
       await api.ingest(provider, payload)
       await onAfterIngest()
+      try { localStorage.setItem(`lastSync:${provider}`, String(Date.now())) } catch {}
     } finally {
       setBusy(false)
     }

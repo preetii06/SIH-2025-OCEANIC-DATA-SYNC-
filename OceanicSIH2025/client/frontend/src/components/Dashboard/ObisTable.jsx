@@ -7,34 +7,31 @@ export default function ObisTable({ records }) {
   }
 
   return (
-    <div className="overflow-x-auto shadow-lg rounded-2xl border border-gray-200 mt-4">
-      <table className="min-w-full text-sm text-left">
-        <thead className="bg-green-100 text-gray-700 font-semibold">
+    <div className="table-wrapper">
+      <table className="table">
+        <thead>
           <tr>
-            <th className="px-4 py-2">Species</th>
-            <th className="px-4 py-2">Family</th>
-            <th className="px-4 py-2">Order</th>
-            <th className="px-4 py-2">Class</th>
-            <th className="px-4 py-2">Depth (m)</th>
-            <th className="px-4 py-2">Event Date</th>
-            <th className="px-4 py-2">Lat</th>
-            <th className="px-4 py-2">Lon</th>
+            <th>Species</th>
+            <th>Family</th>
+            <th>Order</th>
+            <th>Class</th>
+            <th>Depth (m)</th>
+            <th>Event Date</th>
+            <th>Lat</th>
+            <th>Lon</th>
           </tr>
         </thead>
         <tbody>
           {records.map((rec, i) => (
-            <tr
-              key={i}
-              className="border-b hover:bg-gray-50 transition"
-            >
-              <td className="px-4 py-2 font-medium">{rec.species}</td>
-              <td className="px-4 py-2">{rec.family}</td>
-              <td className="px-4 py-2">{rec.order}</td>
-              <td className="px-4 py-2">{rec.class}</td>
-              <td className="px-4 py-2">{rec.depth ?? "–"}</td>
-              <td className="px-4 py-2">{new Date(rec.eventDate).toLocaleDateString()}</td>
-              <td className="px-4 py-2">{rec.latitude?.toFixed(2)}</td>
-              <td className="px-4 py-2">{rec.longitude?.toFixed(2)}</td>
+            <tr key={i}>
+              <td>{rec.species || '—'}</td>
+              <td>{rec.family || '—'}</td>
+              <td>{rec.order || '—'}</td>
+              <td>{rec.class || '—'}</td>
+              <td>{rec.depth ?? '—'}</td>
+              <td>{rec.eventDate ? new Date(rec.eventDate).toLocaleDateString() : '—'}</td>
+              <td>{typeof rec.latitude === 'number' ? rec.latitude.toFixed(2) : '—'}</td>
+              <td>{typeof rec.longitude === 'number' ? rec.longitude.toFixed(2) : '—'}</td>
             </tr>
           ))}
         </tbody>

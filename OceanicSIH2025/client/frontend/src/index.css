@@ -65,6 +65,18 @@ html, body, #root {
 .btn.secondary { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 8px 20px rgba(59,130,246,0.25); }
 .btn.neutral { background: #303a52; box-shadow: none; }
 
+/* Nav links */
+.nav-link {
+  color: #b8c6dc;
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background .2s ease;
+  border: 1px solid transparent;
+}
+.nav-link:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.06); color: #e9f0fb; }
+.nav-link.active { background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: transparent; }
+
 /* Grid helpers */
 .grid {
   display: grid;
@@ -95,8 +107,8 @@ html, body, #root {
 /* Table */
 .table-wrapper { overflow-x: auto; }
 table.table { width: 100%; border-collapse: collapse; }
-table.table thead th { text-align: left; font-size: 12px; color: #9fb3cd; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-table.table tbody td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; color: #d7e2f2; }
+table.table thead th { text-align: left; font-size: 12px; color: #9fb3cd; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
+table.table tbody td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; color: #d7e2f2; vertical-align: top; }
 table.table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.02); }
 table.table tbody tr:hover { background: rgba(255,255,255,0.04); }
 

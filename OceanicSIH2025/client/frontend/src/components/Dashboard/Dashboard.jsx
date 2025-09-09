@@ -1,63 +1,59 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
-
-import Navbar from './Navbar'
 import StatsPanel from './StatsPanel'
-import FisheriesChart from './FisheriesChart'
-import BiodiversityMap from './BiodiversityMap'
 import ProviderButtons from './ProviderButtons'
-import NOAAChart from '../Charts/NOAAChart'
-import WormsTable from './WormsTable'
-import ObisTable from './ObisTable';
-import ObisDepthChart from '../Charts/ObisDepthChart';
-import OpenMeteo from './OpenMeteo';
+
+// Recharts
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Legend,
+  CartesianGrid
+} from 'recharts'
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#845EC2', '#D65DB1', '#FF6F91']
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [records, setRecords] = useState([])
-  const [wormTaxon, setWormTaxon] = useState('');
 
-  // -----------------------------
   // Derived provider-specific data
-  // -----------------------------
-  const obisRecords = useMemo(
-      () => records.filter(r => r.source?.toLowerCase().startsWith("obis")),
-      [records]
-    );
-
   const fisheries = useMemo(
     () => records.filter(r => r.source === 'data.gov.in' && r.year),
     [records]
   )
-  // const wormsRecords = useMemo(
-  //   () => records.filter(r => r.source?.toLowerCase().includes("worms")),
-  //   [records]
-  // );
-  const wormsRecords = useMemo(() => {
-      if (!wormTaxon) {
-        return records.filter(r => r.source?.toLowerCase().includes("worms"));
+
+  // Chart Data
+  const chartData = useMemo(() => {
+    const sourcesMap = {}
+    records.forEach(r => {
+      const key = r.source || 'Unknown'
+      sourcesMap[key] = (sourcesMap[key] || 0) + 1
+    })
+    return Object.entries(sourcesMap).map(([name, value]) => ({ name, value }))
+  }, [records])
+
+  const speciesData = useMemo(() => {
+    const speciesMap = {}
+    records.forEach(r => {
+      if (r.species) {
+        speciesMap[r.species] = (speciesMap[r.species] || 0) + 1
       }
-      return records.filter(
-        r => r.source?.toLowerCase().includes("worms") &&
-            r.scientificName?.toLowerCase().includes(wormTaxon.toLowerCase())
-      );
-    }, [records, wormTaxon]);
+    })
+    return Object.entries(speciesMap).map(([name, count]) => ({ name, count }))
+  }, [records])
 
-
-  const noaaRecords = useMemo(
-    () => records.filter(r => r.source?.toLowerCase().includes('noaa')),
-    [records]
-  )
-  const openMeteoRecords = useMemo(
-  () => records.filter(r => r.source?.toLowerCase().includes("open-meteo")),
-  [records]
-);
-
-
-  // -----------------------------
   // KPIs
-  // -----------------------------
   const kpis = useMemo(() => {
     const total = records.length
     const providers = new Set(records.map(r => (r.source || '').split('/')[0]))
@@ -69,27 +65,12 @@ export default function Dashboard() {
     return { total, providers: providers.size, speciesCount, latestYear }
   }, [records, fisheries])
 
-  // -----------------------------
   // Fetch + Ingest
-  // -----------------------------
   async function fetchData() {
     setLoading(true)
     setError('')
     try {
-      // NOAA configs: one product per ingest
-      const noaaConfigs = [
-        { station: '8723214', product: 'water_temperature', begin_date: '20250101', end_date: '20250105' },
-        { station: '8723214', product: 'air_pressure', begin_date: '20250101', end_date: '20250105' },
-        { station: '8724580', product: 'water_temperature', begin_date: '20250101', end_date: '20250105' },
-      ]
-
-      // Ingest all configs sequentially
-      for (const cfg of noaaConfigs) {
-        await api.ingest('noaa', cfg)
-      }
-
       const data = await api.getData()
-      console.log("Fetched records:", data) // debug log
       setRecords(data)
     } catch (e) {
       console.error(e)
@@ -98,122 +79,110 @@ export default function Dashboard() {
       setLoading(false)
     }
   }
+  useEffect(() => { fetchData() }, [])
 
-  // -----------------------------
-  // Chart Data
-  // -----------------------------
-  const fisheriesChartData = useMemo(() => {
-    return [...fisheries]
-      .map(d => ({
-        year: String(d.year),
-        total: Number(d.total_fish_production_lakh_tonnes ?? d.total) || 0,
-        marine: Number(d.marine_fish_production_lakh_tonnes ?? d.marine) || 0,
-        inland: Number(d.inland_fish_production_lakh_tonnes ?? d.inland) || 0,
-      }))
-      .sort((a, b) => a.year.localeCompare(b.year))
-  }, [fisheries])
+  const providers = [
+    { key: 'fisheries', label: 'Fisheries' },
+    { key: 'obis', label: 'OBIS' },
+    { key: 'worms', label: 'WoRMS' },
+    { key: 'bold', label: 'BOLD' },
+    { key: 'cmfri', label: 'CMFRI PDFs' },
+    { key: 'open-meteo', label: 'Open-Meteo' },
+    { key: 'noaa', label: 'NOAA' },
+  ]
+  function getLastSync(providerKey) {
+    const v = localStorage.getItem(`lastSync:${providerKey}`)
+    if (!v) return 'Never'
+    try { return new Date(Number(v)).toLocaleString() } catch { return '—' }
+  }
 
-  // const center = obisPoints.length
-  //   ? [obisPoints[0].latitude, obisPoints[0].longitude]
-  //   : [20.5937, 78.9629]
+  // Custom Pie Chart Label
+  const renderPieLabel = ({ name, value }) => `${name}: ${value}`
 
-  // -----------------------------
-  // Render
-  // -----------------------------
   return (
     <div className="container">
-      <Navbar />
-      <StatsPanel kpis={kpis} />
+      {/* Charts at the top */}
+      <div className="grid grid-2" style={{ gap: 24, marginBottom: 32 }}>
+        <div className="card">
+          <div className="card-body">
+            <h2 className="card-title">Records by Provider</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="40%"
+                  cy="50%"
+                  outerRadius={100}
+                  labelLine={true} // enables lines connecting slices
+                  label={renderPieLabel}
+                  isAnimationActive={true}
+                  animationDuration={500}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <h2 className="card-title">Species Distribution</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={speciesData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{fontSize:11, fill: '#FAF7F0' }} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" fill="#82ca9d" isAnimationActive={true} animationDuration={500} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Panel */}
+      <StatsPanel kpis={kpis} onTotalClick={() => navigate('/dashboard/records')} />
 
       <div className="grid grid-3" style={{ gap: 24 }}>
-        {/* Records Table */}
+        {/* Left Column */}
         <div className="card" style={{ gridColumn: 'span 2' }}>
           <div className="card-body">
-            <h2 className="card-title">Data Records</h2>
-            <div className="table-wrapper" style={{ overflowX: 'auto' }}>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Source</th>
-                    <th>Timestamp</th>
-                    <th>Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.slice(0, 50).map((r, i) => (
-                    <tr key={i}>
-                      <td>{r.source}</td>
-                      <td>{new Date(r.timestamp).toLocaleString()}</td>
-                      <td>
-                        {r.parameter ? (
-                          <>
-                            <strong>{r.parameter}</strong>: {r.value} {r.unit || ''}
-                            <br />
-                            Station: {r.station}
-                          </>
-                        ) : (
-                          r.species || r.year || '—'
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <h2 className="card-title">Data Providers</h2>
+            {error && (
+              <div style={{ background: '#3b1d2a', color: '#ffb4c8', padding: 10, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>{error}</div>
+            )}
+            <div className="grid grid-2" style={{ gap: 16 }}>
+              {providers.map(p => (
+                <div key={p.key} className="p-3 rounded-md border border-slate-800 bg-slate-900/40 flex items-center justify-between">
+                  <div>
+                    <div className="text-slate-100 font-semibold">{p.label}</div>
+                    <div className="text-xs text-slate-400">Last sync: {getLastSync(p.key)}</div>
+                  </div>
+                  <span className="badge bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 rounded-full px-2 py-1 text-xs">Ready</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Provider Ingestion Panel */}
+        {/* Right Column */}
         <div className="card">
           <div className="card-body">
             <h2 className="card-title">Ingest Providers</h2>
-            {error && (
-              <div
-                style={{
-                  background: '#3b1d2a',
-                  color: '#ffb4c8',
-                  padding: 10,
-                  borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  marginBottom: 8,
-                }}
-              >
-                {error}
-              </div>
-            )}
             <ProviderButtons onAfterIngest={fetchData} />
           </div>
         </div>
-
-        {/* NOAA Chart */}
-        <div className="card" style={{ gridColumn: 'span 3' }}>
-          <div className="card-body">
-            <h2 className="card-title">NOAA Parameters</h2>
-            <NOAAChart records={noaaRecords} />
-          </div>
-        </div>
-        <div className="card" style={{ gridColumn: 'span 3' }}>
-           <div className="card-body">
-              <h2 className="card-title">WoRMS Taxonomy</h2>
-              <WormsTable records={wormsRecords} />
-            </div>
-          </div>
-          <div className="card" style={{ gridColumn: 'span 3' }}>
-           <div className="card-body">
-              <h2 className="card-title">OBIS OCEANIC RECORDS</h2>
-              <ObisTable records={obisRecords} />
-              <ObisDepthChart records={obisRecords} />
-            </div>
-          </div>
-          <div className="card" style={{ gridColumn: 'span 3' }}>
-           <div className="card-body">
-              <h2 className="card-title">Marine Data Dashboard</h2>
-        
-              <OpenMeteo records={openMeteoRecords} />
-
-            </div>
-          </div>
       </div>
     </div>
   )
 }
+
+
