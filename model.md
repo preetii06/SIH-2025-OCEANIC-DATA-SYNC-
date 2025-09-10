@@ -205,35 +205,37 @@ def make_background(df_presence: pd.DataFrame, n_background: int, seed: int = 42
     dates = [datetime(2000,1,1) + pd.to_timedelta(rng.randint(0, 365*20), unit='D') for _ in range(n_background)]
     return pd.DataFrame({"lat": lats, "lon": lons, "depth_m": depths, "eventDate_parsed": dates})
 
+
+
 def features_from_df(df: pd.DataFrame) -> pd.DataFrame:
-    print(df.dtypes)
     X = pd.DataFrame()
     X["lat"] = df["lat"].astype(float)
     X["lon"] = df["lon"].astype(float)
     X["depth_m"] = df["depth_m"].fillna(df["depth_m"].median()).astype(float)
     X["year"] = df["eventDate_parsed"].apply(lambda d: d.year if (pd.notna(d)) else 2000).astype(int)
     X["month"] = df["eventDate_parsed"].apply(lambda d: d.month if (pd.notna(d)) else 1).astype(int)
-    # Add SST and salinity if present
     if "sst" in df.columns:
-        X["sst"] = df["sst"].astype(float)
-    if "salinity" in df.columns:
-        X["salinity"] = df["salinity"].astype(float)
+        X["sst"] = df["sst"].fillna(df["sst"].median()).astype(float)
     return X
 
 def train_single_species(scientific_name: str, max_records: int, test_size: float, random_state: int) -> Dict[str, Any]:
     df = fetch_occurrences_indobis(scientific_name, max_records=max_records, cache=True)
     df["eventDate_parsed"] = pd.to_datetime(df["eventDate"], errors='coerce')
-    #added constants for now to check new coloumns are working fine,will add real values dynamically
-    df["sst"] = 28.5
-    df["salinity"] = 35.2
 
     # Basic QC
     df = df[(df["lat"].between(-90, 90)) & (df["lon"].between(-180, 180))]
     df = df.dropna(subset=["lat", "lon"])
     if len(df) < 30:
         return {"scientific_name": scientific_name, "status": "skipped", "reason": f"Not enough presence records ({len(df)})."}
-
-    pres = df[["lat", "lon", "depth_m", "eventDate_parsed"]].copy()
+    import xarray as xr
+    file_path = "path_of_dataset_sst"
+    ds_sst = xr.open_dataset(file_path)
+    sst_values = ds_sst['MODISA_L3m_SST_Monthly_9km_R2019_0_sst'].interp(
+        lat=xr.DataArray(df['lat'], dims="points"),
+        lon=xr.DataArray(df['lon'], dims="points")
+    )
+    df['sst'] = sst_values.values
+    pres = df[["lat", "lon", "depth_m", "eventDate_parsed","sst"]].copy()
     pres["presence"] = 1
     n_bg = max(len(pres) * 2, 1000)
     bg = make_background(pres, n_background=n_bg, seed=random_state)
