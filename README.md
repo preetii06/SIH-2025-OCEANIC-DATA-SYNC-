@@ -1,5 +1,13 @@
 # 🌊 OCEANIC SIH 2025 — Project Setup Guide
 
+```
+Sardinella longiceps (Indian oil sardine) – very common in Indian Ocean fisheries.
+Thunnus albacares (Yellowfin tuna) – globally distributed, lots of OBIS records.
+Delphinus delphis (Common dolphin) – plenty of marine mammal sightings.
+Epinephelus coioides (Orange-spotted grouper) – strong fisheries + ecological data.
+Charybdis feriata (Crab species, Indo-Pacific) – also present in OBIS.
+```
+
 ## 🖥️ Frontend (ReactJS)
 **Directory:** `OcenicSIH2025/client/frontend`
 
