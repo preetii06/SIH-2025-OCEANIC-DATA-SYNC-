@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import StatsPanel from './StatsPanel'
 import ProviderButtons from './ProviderButtons'
+import IndobisDashboard from '../Ai-Model/IndobisDashboard'
 
 // Recharts
 import {
@@ -178,6 +179,12 @@ export default function Dashboard() {
           <div className="card-body">
             <h2 className="card-title">Ingest Providers</h2>
             <ProviderButtons onAfterIngest={fetchData} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <h2 className="card-title">Ingest Providers</h2>
+            <IndobisDashboard />
           </div>
         </div>
       </div>
