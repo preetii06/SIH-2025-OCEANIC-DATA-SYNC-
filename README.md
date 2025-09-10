@@ -1,5 +1,6 @@
 # 🌊 OCEANIC SIH 2025 — Project Setup Guide
-
+# colab link
+` https://colab.research.google.com/drive/1LSPirUEpJHhjRHbhm7g2mbZys41bDBAi?usp=sharing `
 ## 🖥️ Frontend (ReactJS)
 **Directory:** `OcenicSIH2025/client/frontend`
 
