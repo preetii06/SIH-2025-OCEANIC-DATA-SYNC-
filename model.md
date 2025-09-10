@@ -206,16 +206,27 @@ def make_background(df_presence: pd.DataFrame, n_background: int, seed: int = 42
     return pd.DataFrame({"lat": lats, "lon": lons, "depth_m": depths, "eventDate_parsed": dates})
 
 def features_from_df(df: pd.DataFrame) -> pd.DataFrame:
+    print(df.dtypes)
     X = pd.DataFrame()
     X["lat"] = df["lat"].astype(float)
     X["lon"] = df["lon"].astype(float)
     X["depth_m"] = df["depth_m"].fillna(df["depth_m"].median()).astype(float)
     X["year"] = df["eventDate_parsed"].apply(lambda d: d.year if (pd.notna(d)) else 2000).astype(int)
     X["month"] = df["eventDate_parsed"].apply(lambda d: d.month if (pd.notna(d)) else 1).astype(int)
+    # Add SST and salinity if present
+    if "sst" in df.columns:
+        X["sst"] = df["sst"].astype(float)
+    if "salinity" in df.columns:
+        X["salinity"] = df["salinity"].astype(float)
     return X
 
 def train_single_species(scientific_name: str, max_records: int, test_size: float, random_state: int) -> Dict[str, Any]:
     df = fetch_occurrences_indobis(scientific_name, max_records=max_records, cache=True)
+    df["eventDate_parsed"] = pd.to_datetime(df["eventDate"], errors='coerce')
+    #added constants for now to check new coloumns are working fine,will add real values dynamically
+    df["sst"] = 28.5
+    df["salinity"] = 35.2
+
     # Basic QC
     df = df[(df["lat"].between(-90, 90)) & (df["lon"].between(-180, 180))]
     df = df.dropna(subset=["lat", "lon"])
